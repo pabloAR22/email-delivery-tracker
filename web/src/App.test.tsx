@@ -53,3 +53,43 @@ test('si la API falla muestra el error y permite reintentar', async () => {
   await vi.waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
   expect(rows()).toHaveLength(40);
 });
+
+const abrirFormulario = async (user: ReturnType<typeof userEvent.setup>) => {
+  await user.click(screen.getByText('Enviar un correo'));
+  return screen.getByRole('form', { name: 'Enviar correo' });
+};
+
+test('enviar un correo lo confirma, limpia el formulario y aparece en la tabla', async () => {
+  const user = userEvent.setup();
+  render(<App />);
+  await loaded();
+  const form = await abrirFormulario(user);
+  await user.type(within(form).getByLabelText('Para'), 'nueva@example.com');
+  await user.type(within(form).getByLabelText('Asunto'), 'Hola desde el test');
+  await user.type(within(form).getByLabelText('Mensaje'), 'Texto');
+  await user.click(within(form).getByRole('button', { name: 'Enviar' }));
+
+  expect(await screen.findByRole('status')).toHaveTextContent('Correo enviado');
+  expect(within(form).getByLabelText('Para')).toHaveValue('');
+  expect(await screen.findByText('nueva@example.com')).toBeInTheDocument();
+});
+
+test('si la API rechaza el envío muestra el error y conserva lo escrito', async () => {
+  const user = userEvent.setup();
+  server.use(
+    http.post('/emails', () =>
+      HttpResponse.json({ error: 'no se pudo enviar el correo' }, { status: 502 }),
+    ),
+  );
+  render(<App />);
+  await loaded();
+  const form = await abrirFormulario(user);
+  await user.type(within(form).getByLabelText('Para'), 'ana@example.com');
+  await user.type(within(form).getByLabelText('Asunto'), 'Hola');
+  await user.type(within(form).getByLabelText('Mensaje'), 'Texto');
+  await user.click(within(form).getByRole('button', { name: 'Enviar' }));
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('no se pudo enviar el correo');
+  expect(within(form).getByLabelText('Asunto')).toHaveValue('Hola');
+  expect(within(form).getByRole('button', { name: 'Enviar' })).toBeEnabled();
+});
