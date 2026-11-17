@@ -1,4 +1,5 @@
-export type Status = 'sent' | 'delivered' | 'bounced' | 'opened';
+export const STATUSES = ['sent', 'delivered', 'bounced', 'opened'] as const;
+export type Status = (typeof STATUSES)[number];
 
 // Estados desde los que se acepta cada transición. SQS estándar no garantiza orden:
 // un Delivery tardío no debe pisar un Open ya registrado.

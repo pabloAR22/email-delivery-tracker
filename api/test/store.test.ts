@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb';
 import { afterAll, beforeAll, expect, test } from 'vitest';
-import { mongoStore } from '../src/store.ts';
+import { type Message, mongoStore } from '../src/store.ts';
 
 // Integración contra MongoDB real: se salta si no hay MONGODB_URI (CI y local la definen).
 const uri = process.env.MONGODB_URI;
@@ -28,15 +28,15 @@ const status = async (id: string) =>
       .collection('messages')
       .findOne({ _id: id as never })
   )?.status;
-const seed = (id: string) =>
-  store.insert({
-    _id: id,
-    to: 'a@x.com',
-    subject: 's',
-    status: 'sent',
-    sentAt: new Date(),
-    events: [],
-  });
+const base = (id: string): Message => ({
+  _id: id,
+  to: 'a@x.com',
+  subject: 's',
+  status: 'sent',
+  sentAt: new Date(),
+  events: [],
+});
+const seed = (id: string) => store.insert(base(id));
 
 run('sent -> delivered -> opened', async () => {
   await seed('a');
@@ -58,4 +58,16 @@ run('un mensaje rebotado no se abre ni se entrega', async () => {
   await store.applyStatus('c', 'delivered', new Date());
   await store.applyStatus('c', 'opened', new Date());
   expect(await status('c')).toBe('bounced');
+});
+
+run('list filtra por estado y destinatario (con regex escapado) y counts agrupa', async () => {
+  await store.insert({ ...base('l1'), to: 'ana.perez@x.com' });
+  await store.insert({ ...base('l2'), to: 'anaXperez@x.com' });
+  await store.applyStatus('l1', 'delivered', new Date());
+  const lim = { limit: 50 };
+  expect((await store.list({ ...lim, to: 'ana.perez' })).map((m) => m._id)).toEqual(['l1']);
+  expect((await store.list({ ...lim, status: 'delivered' })).map((m) => m._id)).toContain('l1');
+  expect((await store.list({ ...lim, until: new Date(0) })).length).toBe(0);
+  const counts = await store.counts();
+  expect(counts.delivered).toBeGreaterThanOrEqual(1);
 });
