@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest';
 import { consumeOnce } from '../src/consumer.ts';
+import { fakeStore } from './helpers.ts';
 
 const ev = (eventType: string) => ({
   Body: JSON.stringify({ eventType, mail: { messageId: 'm1' } }),
@@ -9,13 +10,12 @@ const ev = (eventType: string) => ({
 function setup(messages: { Body?: string; ReceiptHandle?: string }[], fail = false) {
   const applied: string[] = [];
   const removed: string[] = [];
-  const store = {
-    insert: async () => {},
-    applyStatus: async (_id: string, status: string) => {
+  const store = fakeStore({
+    applyStatus: async (_id, status) => {
       if (fail) throw new Error('mongo caído');
       applied.push(status);
     },
-  };
+  });
   const queue = {
     receive: async () => messages,
     remove: async (h: string) => void removed.push(h),
