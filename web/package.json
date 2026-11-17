@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "oxlint",
+    "lint": "oxlint && prettier --check .",
     "preview": "vite preview",
     "test": "vitest run"
   },
@@ -25,8 +25,13 @@
     "jsdom": "^31.0.1",
     "msw": "^3.0.6",
     "oxlint": "^1.90.0",
+    "prettier": "^3.10.1",
     "typescript": "~7.0.2",
     "vite": "^8.3.6",
     "vitest": "^5.1.0"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "printWidth": 100
   }
 }

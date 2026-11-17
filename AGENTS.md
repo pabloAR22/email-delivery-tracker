@@ -36,7 +36,7 @@ Node + Express 5 + TypeScript (`api/`), SES y SQS en el AWS Emulator oficial, Mo
 ```
 docker compose up -d      # MongoDB + AWS Emulator
 cd api && npm ci && npm test && npm run lint     # MONGODB_URI=mongodb://localhost:27017/etd activa los tests con Mongo real
-cd web && npm ci && npm test && npm run lint && npm run build
+cd web && npm ci && npm test && npm run lint && npm run build   # lint incluye prettier --check (singleQuote, 100 columnas, igual que api)
 cd web && npm run dev     # proxy /emails -> localhost:3000 (API aparte, ver .env.example)
 ```
 
@@ -56,4 +56,4 @@ Tests: `test/store.test.ts` usa MongoDB real y se salta sin `MONGODB_URI` (el CI
 
 `GET /emails?status=&to=&since=&until=&limit=` (limit 1–200, por defecto 50; solo query params string, otro formato → 400; `to` busca por subcadena sin distinguir mayúsculas y escapa la regex) y `GET /emails/stats` (conteos por estado). `store.list` normaliza `events` en documentos anteriores a la fase 3.
 
-`web/src`: `api.ts` (tipos y fetch), `App.tsx` (tarjetas por estado que filtran, filtros con debounce de 300 ms, tabla, estados de carga/vacío/error con reintento, refresco cada 5 s), `mocks/` (datos sintéticos y handlers MSW: los usan los tests y los usará la demo). MSW 3: la opción es `onUnhandledFrame`, no `onUnhandledRequest`. Los tests esperan una fila de datos (`ana0@example.com`), no `findAllByRole('row')`, que se cumple con la cabecera.
+`web/src`: `api.ts` (tipos y fetch), `SendForm.tsx` (formulario `<details>` que hace `POST /emails`, conserva lo escrito si falla y recarga la lista al enviar), `App.tsx` (tarjetas por estado que filtran, filtros con debounce de 300 ms, tabla, estados de carga/vacío/error con reintento, refresco cada 5 s), `mocks/` (datos sintéticos y handlers MSW, incluido `POST /emails` que añade el correo a la lista; `resetMessages()` los restablece tras cada test; los usan los tests y los usará la demo). MSW 3: la opción es `onUnhandledFrame`, no `onUnhandledRequest`. Los tests esperan una fila de datos (`ana0@example.com`), no `findAllByRole('row')`, que se cumple con la cabecera.

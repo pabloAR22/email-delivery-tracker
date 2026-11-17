@@ -11,7 +11,12 @@ export type Message = {
   events: { type: Status; at: string }[];
 };
 
-export type Filters = { status: Status | ''; to: string; since: string; until: string };
+export type Filters = {
+  status: Status | '';
+  to: string;
+  since: string;
+  until: string;
+};
 
 async function get<T>(path: string, params: Record<string, string> = {}, signal?: AbortSignal) {
   const url = new URL(path, window.location.href);
@@ -35,3 +40,16 @@ export const fetchEmails = (f: Filters, signal?: AbortSignal) =>
   );
 
 export const fetchStats = (signal?: AbortSignal) => get<Counts>('/emails/stats', {}, signal);
+
+export type NewEmail = { to: string; subject: string; body: string };
+
+export async function sendEmail(email: NewEmail) {
+  const res = await fetch(new URL('/emails', window.location.href), {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(email),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error ?? `La API respondió ${res.status}`);
+  return data as { messageId: string; status: Status };
+}

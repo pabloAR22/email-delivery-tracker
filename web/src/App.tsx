@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import SendForm from './SendForm';
 import {
   STATUSES,
   fetchEmails,
@@ -19,7 +20,10 @@ const REFRESH_MS = 5000;
 const EMPTY: Filters = { status: '', to: '', since: '', until: '' };
 
 const fmt = (iso: string) =>
-  new Date(iso).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' });
+  new Date(iso).toLocaleString('es-CO', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  });
 
 function useDebounced<T>(value: T, ms: number) {
   const [v, setV] = useState(value);
@@ -36,7 +40,7 @@ export default function App() {
   const [rows, setRows] = useState<Message[] | null>(null);
   const [counts, setCounts] = useState<Counts | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [retry, setRetry] = useState(0);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -59,7 +63,7 @@ export default function App() {
       ctrl.abort();
       clearInterval(timer);
     };
-  }, [debounced, retry]);
+  }, [debounced, reload]);
 
   const set = (patch: Partial<Filters>) => setFilters((f) => ({ ...f, ...patch }));
   const filtered = Object.values(filters).some(Boolean);
@@ -82,6 +86,8 @@ export default function App() {
           </button>
         ))}
       </section>
+
+      <SendForm onSent={() => setReload((n) => n + 1)} />
 
       <form className="filters" role="search" onSubmit={(e) => e.preventDefault()}>
         <label>
@@ -109,11 +115,19 @@ export default function App() {
         </label>
         <label>
           Desde
-          <input type="date" value={filters.since} onChange={(e) => set({ since: e.target.value })} />
+          <input
+            type="date"
+            value={filters.since}
+            onChange={(e) => set({ since: e.target.value })}
+          />
         </label>
         <label>
           Hasta
-          <input type="date" value={filters.until} onChange={(e) => set({ until: e.target.value })} />
+          <input
+            type="date"
+            value={filters.until}
+            onChange={(e) => set({ until: e.target.value })}
+          />
         </label>
         <button type="button" disabled={!filtered} onClick={() => setFilters(EMPTY)}>
           Limpiar
@@ -123,7 +137,7 @@ export default function App() {
       {error && (
         <div role="alert" className="error">
           No se pudo cargar: {error}{' '}
-          <button onClick={() => setRetry((n) => n + 1)}>Reintentar</button>
+          <button onClick={() => setReload((n) => n + 1)}>Reintentar</button>
         </div>
       )}
 
