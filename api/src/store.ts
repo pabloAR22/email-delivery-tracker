@@ -30,18 +30,21 @@ export async function mongoStore(uri: string) {
         { _id: id, status: { $in: ALLOWED_FROM[status] } },
         { $set: { status }, $push: { events: { type: status, at } } },
       )),
-    list: ({ status, to, since, until, limit }) =>
-      messages
-        .find({
-          ...(status && { status }),
-          ...(to && { to: { $regex: to.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' } }),
-          ...((since || until) && {
-            sentAt: { ...(since && { $gte: since }), ...(until && { $lte: until }) },
-          }),
-        })
-        .sort({ sentAt: -1 })
-        .limit(limit)
-        .toArray(),
+    list: async ({ status, to, since, until, limit }) =>
+      // Documentos anteriores a la fase 3 no tienen `events`: se normaliza para no romper a los clientes.
+      (
+        await messages
+          .find({
+            ...(status && { status }),
+            ...(to && { to: { $regex: to.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' } }),
+            ...((since || until) && {
+              sentAt: { ...(since && { $gte: since }), ...(until && { $lte: until }) },
+            }),
+          })
+          .sort({ sentAt: -1 })
+          .limit(limit)
+          .toArray()
+      ).map((m) => ({ ...m, events: m.events ?? [] })),
     counts: async () => {
       const counts: Counts = { sent: 0, delivered: 0, bounced: 0, opened: 0 };
       for await (const g of messages.aggregate<{ _id: Status; n: number }>([

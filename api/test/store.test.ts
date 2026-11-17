@@ -71,3 +71,18 @@ run('list filtra por estado y destinatario (con regex escapado) y counts agrupa'
   const counts = await store.counts();
   expect(counts.delivered).toBeGreaterThanOrEqual(1);
 });
+
+run('list devuelve events vacío en documentos anteriores a la fase 3', async () => {
+  await raw
+    .db()
+    .collection('messages')
+    .insertOne({
+      _id: 'old' as never,
+      to: 'old@x.com',
+      subject: 's',
+      status: 'sent',
+      sentAt: new Date(),
+    });
+  const [m] = await store.list({ limit: 1, to: 'old@x.com' });
+  expect(m.events).toEqual([]);
+});
