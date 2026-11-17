@@ -21,7 +21,8 @@
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.1170.0",
     "@aws-sdk/client-sqs": "^3.1170.0",
-    "express": "^5.3.0"
+    "express": "^5.3.0",
+    "mongodb": "^7.9.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

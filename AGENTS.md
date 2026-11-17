@@ -26,7 +26,7 @@ Node + Express 5 + TypeScript (`api/`), SES y SQS en el AWS Emulator oficial, Mo
 | Fase | Qué | Estado |
 |---|---|---|
 | 1 | Esqueleto: API `/health`, CI, Docker Compose con Mongo | ✅ |
-| 2 | API de envío (SES) + modelo de mensaje en Mongo | ⬜ |
+| 2 | `POST /emails`: envía por SES y guarda el mensaje en Mongo (`sent`) | ✅ |
 | 3 | Simulador de eventos + consumidor SQS + estado por mensaje | ⬜ |
 | 4 | Dashboard React con filtros | ⬜ |
 | 5 | Demo Vercel + MSW, README, publicaciones | ⬜ |
@@ -37,3 +37,7 @@ Node + Express 5 + TypeScript (`api/`), SES y SQS en el AWS Emulator oficial, Mo
 docker compose up -d      # MongoDB + AWS Emulator
 cd api && npm ci && npm test && npm run lint
 ```
+
+## Estructura de la API
+
+`api/src/app.ts` (`createApp({ send, store })`, dependencias inyectadas para testear sin AWS ni Mongo) · `ses.ts` (envío, identidad del remitente, reintento por verificación tardía) · `store.ts` (Mongo, colección `messages`, `_id` = MessageId de SES) · `server.ts` (arranque). Los tests usan dobles en memoria, por eso el CI no necesita el emulador.
