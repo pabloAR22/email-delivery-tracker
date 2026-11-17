@@ -1,7 +1,16 @@
 services:
   mongo:
     image: mongo:8
-    ports: ["27017:27017"]
+    ports: ["127.0.0.1:27017:27017"]
     volumes: [mongo-data:/data/db]
+  # AWS Emulator oficial. Escribe ca.pem y credenciales en ~/.aws/emulator/9297 del host.
+  aws:
+    build: emulator
+    command: ["-p", "9297"]
+    environment:
+      HOME: ${HOME}
+    volumes: ["${HOME}/.aws/emulator:${HOME}/.aws/emulator"]
+    ports: ["127.0.0.1:9297:9297"]
+    mem_limit: 2g
 volumes:
   mongo-data:
