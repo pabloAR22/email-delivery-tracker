@@ -28,7 +28,14 @@ export function createApp({ send, store }: { send: Sender; store: Store }) {
       res.status(502).json({ error: 'no se pudo enviar el correo' });
       return;
     }
-    await store.insert({ _id: messageId, to, subject, status: 'sent', sentAt: new Date() });
+    await store.insert({
+      _id: messageId,
+      to,
+      subject,
+      status: 'sent',
+      sentAt: new Date(),
+      events: [],
+    });
     res.status(201).json({ messageId, status: 'sent' });
   });
 

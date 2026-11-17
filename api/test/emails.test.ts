@@ -7,7 +7,10 @@ const valid = { to: 'ana@example.com', subject: 'Hola', body: 'Texto' };
 
 function setup(send = async () => 'msg-1') {
   const saved: Message[] = [];
-  const app = createApp({ send, store: { insert: async (m) => void saved.push(m) } });
+  const app = createApp({
+    send,
+    store: { insert: async (m) => void saved.push(m), applyStatus: async () => {} },
+  });
   return { app, saved };
 }
 
@@ -16,7 +19,9 @@ test('POST /emails envía y guarda el mensaje como sent', async () => {
   const res = await request(app).post('/emails').send(valid);
   expect(res.status).toBe(201);
   expect(res.body).toEqual({ messageId: 'msg-1', status: 'sent' });
-  expect(saved).toMatchObject([{ _id: 'msg-1', to: valid.to, subject: 'Hola', status: 'sent' }]);
+  expect(saved).toMatchObject([
+    { _id: 'msg-1', to: valid.to, subject: 'Hola', status: 'sent', events: [] },
+  ]);
 });
 
 test.each([

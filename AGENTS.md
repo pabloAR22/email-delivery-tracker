@@ -27,7 +27,7 @@ Node + Express 5 + TypeScript (`api/`), SES y SQS en el AWS Emulator oficial, Mo
 |---|---|---|
 | 1 | Esqueleto: API `/health`, CI, Docker Compose con Mongo | ✅ |
 | 2 | `POST /emails`: envía por SES y guarda el mensaje en Mongo (`sent`) | ✅ |
-| 3 | Simulador de eventos + consumidor SQS + estado por mensaje | ⬜ |
+| 3 | Simulador de eventos + consumidor SQS + estado por mensaje | ✅ |
 | 4 | Dashboard React con filtros | ⬜ |
 | 5 | Demo Vercel + MSW, README, publicaciones | ⬜ |
 
@@ -41,3 +41,11 @@ cd api && npm ci && npm test && npm run lint
 ## Estructura de la API
 
 `api/src/app.ts` (`createApp({ send, store })`, dependencias inyectadas para testear sin AWS ni Mongo) · `ses.ts` (envío, identidad del remitente, reintento por verificación tardía) · `store.ts` (Mongo, colección `messages`, `_id` = MessageId de SES) · `server.ts` (arranque). Los tests usan dobles en memoria, por eso el CI no necesita el emulador.
+
+## Eventos y estados
+
+`events.ts` (formato de eventos de SES, transiciones permitidas y simulador) · `sqs.ts` (cliente de la cola `email-events`) · `consumer.ts` (long polling; solo borra de la cola lo que se aplicó bien, si Mongo falla SQS reentrega). Estados: `sent` → `delivered` | `bounced`, y `delivered` → `opened`. SQS estándar no garantiza orden, así que `applyStatus` solo avanza si el estado actual lo permite.
+
+Simulador (se retira cuando el emulador publique los eventos de SES): publica en la cola tras cada envío. Por destinatario: `bounce@…` rebota, `unopened@…` solo se entrega, cualquier otro se entrega y se abre.
+
+Tests: `test/store.test.ts` usa MongoDB real y se salta sin `MONGODB_URI` (el CI la define con un servicio Mongo). El resto usa dobles en memoria.
