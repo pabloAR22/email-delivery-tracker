@@ -4,6 +4,8 @@ Tracks what happens to every email a notification app sends — sent, delivered,
 
 **Live demo:** https://email-delivery-tracker.vercel.app (runs entirely in the browser with [MSW](https://mswjs.io): no backend, synthetic data).
 
+![Sending an email to bounce@example.com: the Sent counter drops and Bounced goes up](docs/demo.gif)
+
 All data is synthetic. The fictitious app sends through Amazon SES; SES and SQS run in the [official AWS Emulator](https://docs.aws.amazon.com/emulator/latest/userguide/getting-started.html), so the whole project runs locally at zero cost.
 
 ## Architecture
