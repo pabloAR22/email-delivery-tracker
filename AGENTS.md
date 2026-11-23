@@ -29,7 +29,7 @@ Node + Express 5 + TypeScript (`api/`), SES y SQS en el AWS Emulator oficial, Mo
 | 2 | `POST /emails`: envía por SES y guarda el mensaje en Mongo (`sent`) | ✅ |
 | 3 | Simulador de eventos + consumidor SQS + estado por mensaje | ✅ |
 | 4 | `GET /emails` con filtros + dashboard React | ✅ |
-| 5 | Demo Vercel + MSW, README, publicaciones | ✅ (falta desplegar en Vercel) |
+| 5 | Demo Vercel + MSW, README, publicaciones | ✅ (demo: https://email-delivery-tracker.vercel.app) |
 
 ## Comandos
 
@@ -37,7 +37,7 @@ Node + Express 5 + TypeScript (`api/`), SES y SQS en el AWS Emulator oficial, Mo
 docker compose up -d      # MongoDB + AWS Emulator
 cd api && npm ci && npm test && npm run lint     # MONGODB_URI=mongodb://localhost:27017/etd activa los tests con Mongo real
 cd web && npm ci && npm test && npm run lint && npm run build   # lint incluye prettier --check (singleQuote, 100 columnas, igual que api)
-cd web && npm run build:demo   # build de la demo pública (VITE_DEMO, MSW en el navegador; `vercel.json` en la raíz)
+cd web && npm run build:demo   # build de la demo pública (VITE_DEMO, MSW en el navegador; `vercel.json` y `.vercelignore` en la raíz: sin él Vercel toma `api/` como funciones serverless)
 cd web && npm run dev     # proxy /emails -> localhost:3000 (API aparte, ver .env.example)
 ```
 
