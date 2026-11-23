@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
-import { STATUSES, type Counts } from '../api';
-import { messages } from './data';
+import { STATUSES, type Counts, type Message } from '../api';
+import { messages, simulateEvents } from './data';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -14,14 +14,17 @@ export const handlers = [
         { status: 400 },
       );
     const messageId = `msg-new-${messages.length + 1}`;
-    messages.unshift({
+    const message: Message = {
       _id: messageId,
       to,
       subject,
       status: 'sent',
       sentAt: new Date().toISOString(),
       events: [],
-    });
+    };
+    messages.unshift(message);
+    // Solo en la demo del navegador: imita al simulador de eventos de la API real.
+    if (import.meta.env.VITE_DEMO) simulateEvents(message);
     return HttpResponse.json({ messageId, status: 'sent' }, { status: 201 });
   }),
   http.get('/emails/stats', () => {

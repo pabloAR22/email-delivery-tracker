@@ -35,3 +35,19 @@ const seed = (): Message[] =>
 // Mutable: el POST de la demo añade correos. Los tests lo restablecen tras cada caso.
 export const messages: Message[] = seed();
 export const resetMessages = () => void messages.splice(0, messages.length, ...seed());
+
+const PATH: Record<string, Status[]> = { bounce: ['bounced'], unopened: ['delivered'] };
+
+// Misma regla que la API: bounce@ rebota, unopened@ solo se entrega, el resto se entrega y se abre.
+export function simulateEvents(m: Message) {
+  const steps = PATH[m.to.split('@')[0]] ?? ['delivered', 'opened'];
+  steps.forEach((type, i) =>
+    setTimeout(
+      () => {
+        m.status = type;
+        m.events.push({ type, at: new Date().toISOString() });
+      },
+      1500 * (i + 1),
+    ),
+  );
+}
